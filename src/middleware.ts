@@ -18,15 +18,15 @@ export async function updateSession(request: NextRequest) {
   });
 
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    process.env.SUPABASE_URL!,
+    process.env.SUPABASE_ANON_KEY!,
     {
       cookies: {
         getAll() {
           return request.cookies.getAll();
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) =>
+          cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value)
           );
           supabaseResponse = NextResponse.next({
@@ -45,14 +45,9 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const pathname = request.nextUrl.pathname;
-  const isAuthRoute: string[] = [
-    "/login",
-    "/sign-up",
-    "/forgot-password",
-    "/verify-otp",
-  ];
+  const isAuthRoute: string[] = ["/login", "/sign-up", "/forgot-password"];
   const isRecoveryMode =
-    (await cookies()).get("recoveryMode")?.value === "true";
+    (await cookies()).get("recovery-mode")?.value === "true";
 
   if (pathname === "/set-new-password") {
     if (!user || !isRecoveryMode) {
@@ -75,7 +70,7 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(new URL("/", request.url));
   }
 
-  if (!user && !isAuthRoute.includes(pathname)) {
+  if (!user && !isAuthRoute.includes(pathname) && pathname !== "/verify-otp") {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
