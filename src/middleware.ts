@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
-import { NextRequest, NextResponse } from "next/server";
+import { cookies } from "next/headers";
+import { NextResponse, type NextRequest } from "next/server";
 
 export async function middleware(request: NextRequest) {
   return await updateSession(request);
@@ -17,8 +18,8 @@ export async function updateSession(request: NextRequest) {
   });
 
   const supabase = createServerClient(
-    process.env.SUPABASE_URL!,
-    process.env.SUPABASE_ANON_KEY!,
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
         getAll() {
@@ -43,37 +44,39 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const isRecoveryMode = request.cookies.get("recovery-mode")?.value === "true";
+  const pathname = request.nextUrl.pathname;
+  const isAuthRoute: string[] = [
+    "/login",
+    "/sign-up",
+    "/forgot-password",
+    "/verify-otp",
+  ];
+  const isRecoveryMode =
+    (await cookies()).get("recoveryMode")?.value === "true";
 
-  if (request.nextUrl.pathname === "/set-new-password") {
+  if (pathname === "/set-new-password") {
     if (!user || !isRecoveryMode) {
-      return NextResponse.redirect(new URL("/forgot-password", request.url));
+      return NextResponse.redirect(new URL("/login", request.url));
     }
   }
 
-  // Handle recovery flow
-  if (isRecoveryMode && user) {
-    if (request.nextUrl.pathname === "/verify-otp") {
+  if (user && isRecoveryMode) {
+    if (pathname === "/verify-otp") {
       return NextResponse.redirect(new URL("/set-new-password", request.url));
     }
 
-    if (request.nextUrl.pathname !== "/set-new-password") {
+    if (pathname !== "/set-new-password") {
       return NextResponse.redirect(new URL("/set-new-password", request.url));
     }
     return supabaseResponse;
   }
 
-  // Normal auth flow
-  const authRoutes = ["/login", "/sign-up", "/forgot-password", "/verify-otp"];
-  const isAuthRoute = authRoutes.includes(request.nextUrl.pathname);
-  const isResendOtpRoute = request.nextUrl.pathname === "/api/resend-otp";
-
-  if (!user && !isAuthRoute && !isResendOtpRoute) {
-    return NextResponse.redirect(new URL("/login", request.url));
+  if (isAuthRoute.includes(pathname) && user) {
+    return NextResponse.redirect(new URL("/", request.url));
   }
 
-  if (user && isAuthRoute && !isRecoveryMode) {
-    return NextResponse.redirect(new URL("/", request.url));
+  if (!user && !isAuthRoute.includes(pathname)) {
+    return NextResponse.redirect(new URL("/login", request.url));
   }
 
   return supabaseResponse;
