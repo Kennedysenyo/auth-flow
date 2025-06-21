@@ -1,6 +1,7 @@
 import { isCorrectFormat } from "@/utils/input-format";
 import { handleError } from "../error/handle-error";
 import { createClient } from "../supabase/server";
+import { SendWelcomeEmail } from "@/actions/emails/welcome";
 
 export const VerifyOtp = async (
   type: "signup" | "recovery",
@@ -17,6 +18,9 @@ export const VerifyOtp = async (
     });
 
     if (error || !data) throw error;
+
+    const emailRespose = await SendWelcomeEmail(email, "John Kennedy");
+    if (emailRespose) console.error("Welcome Email Send Fail.", emailRespose);
 
     return null;
   } catch (error) {

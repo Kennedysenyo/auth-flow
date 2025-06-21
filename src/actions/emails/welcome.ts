@@ -7,16 +7,19 @@ import { Resend } from "resend";
 const resend = new Resend(process.env.RESEND_API_KEY!);
 
 export const SendWelcomeEmail = async (
+  email: string,
   name: string
 ): Promise<string | null> => {
   try {
+    console.log("this is the email received for sending", email);
     const { data, error } = await resend.emails.send({
-      from: "Acme <onboarding@resend.dev>",
-      to: ["contact@kencoding.dev"],
-      subject: "Hello world",
-      react: WelcomEmail({ name: "John" }),
+      from: "KenCoding <onboarding@resend.dev>",
+      to: [email],
+      subject: "Welcome to KenCoding",
+      react: WelcomEmail({ name }),
     });
-    if (error) throw error;
+
+    if (!data || error) throw error;
     return null;
   } catch (error) {
     return handleError(error);

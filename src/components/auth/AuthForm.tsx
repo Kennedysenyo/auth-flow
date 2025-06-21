@@ -99,6 +99,19 @@ export const AuthForm = ({ type }: Props) => {
       >
         {isPending ? "..." : isLoginPage ? "Login" : "Sign UP"}
       </button>
+
+      <div className="flex justify-center items-center w-full p-4 flex-col">
+        {isLoginPage ? (
+          <button className="bg-white text-black px-4 py-2 text-center cursor-pointer">
+            Log in with google
+          </button>
+        ) : (
+          <button className="bg-white text-black px-4 py-2 text-center cursor-pointer">
+            Signup with google
+          </button>
+        )}
+      </div>
+
       {
         <p className="text-center text-xs">
           {isLoginPage
