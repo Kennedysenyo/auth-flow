@@ -70,7 +70,13 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(new URL("/", request.url));
   }
 
-  if (!user && !isAuthRoute.includes(pathname) && pathname !== "/verify-otp") {
+  if (
+    !user &&
+    !isAuthRoute.includes(pathname) &&
+    pathname !== "/verify-otp" &&
+    pathname !== "/api/resend-otp" &&
+    !pathname.includes("/auth/callback")
+  ) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
